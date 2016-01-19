@@ -5,7 +5,7 @@ Redux Implemenation in C++14 - a predictable state container for C++.
 flowcpp is a C++ header-only implementation of the JavaScript Redux library by Dan Abramov and the Community.
 Idea is shamelessly borrowed from Redux's idea (All credits go to them). Implementation of flowcpp keeps as close as possible with original implemenation of Redux while maintaining C++ semantics.
 
-For beginners, a complete and extensive walkthrough can be found [here] in the official Redux repository. [Redux](https://github.com/rackt/redux)
+For beginners, a complete and extensive walkthrough can be found in the official Redux repository. [Redux](https://github.com/rackt/redux)
 
 # The Gist
 
