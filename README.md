@@ -36,8 +36,6 @@ struct increment_action {
 };
 
 struct decrement_action {
-  decrement_action(int payload) : _payload{payload} { }
-
   int payload() const { return _payload; }
 
   counter_action_type type() const { return _type; }
