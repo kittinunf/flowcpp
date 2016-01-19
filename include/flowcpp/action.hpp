@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace flow {
 
 template <class Payload = std::string, class Type = int, class Meta = void *>

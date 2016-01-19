@@ -82,10 +82,10 @@ auto s = flow::create_store_with_action<counter_state, counter_action>(reducer, 
 int main() {
   // disposable
   auto d = s.subscribe([](counter_state state) { std::cout << state.to_string() << std::endl; });
-  
+
   // call dispatch to let reducer create new modified state from original state
   s.dispatch(increment_action{2});
-  
+
   // call dispose to stop subscription, lambda in subscribe block is no longer functioning
   flow::disposable(d)();
 
@@ -95,7 +95,7 @@ int main() {
   s.dispatch(decrement_action{5});
 
   // get state after perform all actions
-  
+
   // actions are starting with 5 then + 2 - 10 + 3 - 5
   std::cout << flow::get_state(s)().to_string() << std::endl; // print counter: -5
 }
