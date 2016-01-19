@@ -2,8 +2,6 @@
 
 #include <flowcpp/flow.h>
 
-using namespace std;
-
 enum class counter_action_type {
   nothing, increment, decrement
 };
@@ -41,7 +39,7 @@ struct decrement_action {
 };
 
 struct counter_state {
-  string to_string() {
+  std::string to_string() {
     return "counter: " + std::to_string(_counter);
   }
 
@@ -74,7 +72,7 @@ int main() {
 
   // disposable
   auto d = s.subscribe(
-      [](counter_state state) { cout << state.to_string() << endl; });
+      [](counter_state state) { std::cout << state.to_string() << std::endl; });
 
   s.dispatch(increment_action{2});
 
@@ -84,7 +82,7 @@ int main() {
   s.dispatch(increment_action{3});
   s.dispatch(decrement_action{5});
 
-  cout << flow::get_state(s)().to_string() << endl;
+  std::cout << flow::get_state(s)().to_string() << std::endl;
 
   return 0;
 }
