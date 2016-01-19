@@ -1,15 +1,15 @@
 # flowcpp
-Redux Implemenation in C++14 - a predictable state container for C++
+Redux Implemenation in C++14 - a predictable state container for C++.
 
 # Introduction
-flowcpp is a C++ implementation of the JavaScript [Redux](https://github.com/rackt/redux) library by Dan Abramov and the React Community. 
-Idea is shamelessly borrowed from Redux (All credits go to them). Implementation of flowcpp keeps as close as possible with original implemenation of Redux while maintaining C++ semantics.
+flowcpp is a C++ header-only implementation of the JavaScript Redux library by Dan Abramov and the Community.
+Idea is shamelessly borrowed from Redux's idea (All credits go to them). Implementation of flowcpp keeps as close as possible with original implemenation of Redux while maintaining C++ semantics.
 
 For beginners, a complete and extensive walkthrough can be found [here] in the official Redux repository. [Redux](https://github.com/rackt/redux)
 
 # The Gist
 
-A direct translation from original [gist](https://github.com/rackt/redux/blob/master/README.md#the-gist)
+A direct translation from original with slight modification [gist](https://github.com/rackt/redux/blob/master/README.md#the-gist)
 
 ``` C++
 #include <iostream>
@@ -79,18 +79,30 @@ auto reducer = [](counter_state state, counter_action action) -> counter_state {
 };
 
 // store
-auto s = flow::create_store_with_action<counter_state, counter_action>(reducer, counter_state(), increment_action{10});
+auto s = flow::create_store_with_action<counter_state, counter_action>(reducer, counter_state(), increment_action{5});
 
-// disposable
-auto d = s.subscribe([](counter_state state) { std::cout << state.to_string() << std::endl; });
+int main() {
+  // disposable
+  auto d = s.subscribe([](counter_state state) { std::cout << state.to_string() << std::endl; });
+  
+  // call dispatch to let reducer create new modified state from original state
+  s.dispatch(increment_action{2});
+  
+  // call dispose to stop subscription, lambda in subscribe block is no longer functioning
+  flow::disposable(d)();
 
-s.dispatch(increment_action{2});
+  // dispatch more actions
+  s.dispatch(decrement_action{10});
+  s.dispatch(increment_action{3});
+  s.dispatch(decrement_action{5});
 
-flow::disposable(d)();
-
-s.dispatch(decrement_action{10});
-s.dispatch(increment_action{3});
-s.dispatch(decrement_action{5});
-
-std::cout << flow::get_state(s)().to_string() << std::endl;
+  // get state after perform all actions
+  
+  // actions are starting with 5 then + 2 - 10 + 3 - 5
+  std::cout << flow::get_state(s)().to_string() << std::endl; // print counter: -5
+}
 ```
+
+# Installation
+
+* Include directory "flowcpp/include", then use umbrella header to access all files `#include <flowcpp/flow.h>` and you are done.
