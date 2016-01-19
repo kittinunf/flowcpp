@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 namespace flow {
 
 template <class State, class Action>
