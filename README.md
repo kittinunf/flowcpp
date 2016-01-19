@@ -5,7 +5,7 @@ Redux Implemenation in C++14 - a predictable state container for C++.
 flowcpp is a C++ header-only implementation of the JavaScript Redux library by Dan Abramov and the Community.
 Idea is shamelessly borrowed from Redux's idea (All credits go to them). Implementation of flowcpp keeps as close as possible with original implemenation of Redux while maintaining C++ semantics.
 
-For beginners, a complete and extensive walkthrough can be found [here] in the official Redux repository. [Redux](https://github.com/rackt/redux)
+For beginners, a complete and extensive walkthrough can be found in the official Redux repository. [Redux](https://github.com/rackt/redux)
 
 # The Gist
 
@@ -82,10 +82,10 @@ auto s = flow::create_store_with_action<counter_state, counter_action>(reducer, 
 int main() {
   // disposable
   auto d = s.subscribe([](counter_state state) { std::cout << state.to_string() << std::endl; });
-  
+
   // call dispatch to let reducer create new modified state from original state
   s.dispatch(increment_action{2});
-  
+
   // call dispose to stop subscription, lambda in subscribe block is no longer functioning
   flow::disposable(d)();
 
@@ -95,7 +95,7 @@ int main() {
   s.dispatch(decrement_action{5});
 
   // get state after perform all actions
-  
+
   // actions are starting with 5 then + 2 - 10 + 3 - 5
   std::cout << flow::get_state(s)().to_string() << std::endl; // print counter: -5
 }
