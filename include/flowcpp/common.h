@@ -1,15 +1,12 @@
 #pragma once
 
 #include <functional>
+#include "disposable.hpp"
 
 namespace flow {
 
 template <class State, class Action>
 class basic_store;
-
-template <class Disposed = std::function<bool()>,
-          class Disposable = std::function<void()>>
-class basic_disposable;
 
 template <class State, class Action>
 using reducer_t = std::function<State(State, Action)>;

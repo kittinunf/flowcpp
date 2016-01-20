@@ -26,14 +26,11 @@ class basic_middleware {
 
   basic_middleware& operator=(basic_middleware&&) = default;
 
-  template <class S, class A>
-  friend std::function<A(A)> dispatch(const basic_middleware<S, A>& middleware);
+  std::function<action_t(action_t)> dispatch() const { return _p->dispatch(); }
 
-  template <class S, class A>
-  friend std::function<S()> get_state(const basic_middleware<S, A>& middleware);
+  std::function<state_t()> get_state() const { return _p->get_state(); }
 
-  template <class S, class A>
-  friend S state(const basic_middleware<S, A>& middleware);
+  state_t state() const { return _p->get_state()(); }
 
  private:
   struct concept {
@@ -61,21 +58,5 @@ class basic_middleware {
 
   std::unique_ptr<concept> _p;
 };
-
-// midddleware-based concept
-template <class S, class A>
-std::function<A(A)> dispatch(const basic_middleware<S, A>& middleware) {
-  return middleware._p->dispatch();
-}
-
-template <class S, class A>
-std::function<S()> get_state(const basic_middleware<S, A>& middleware) {
-  return middleware._p->get_state();
-}
-
-template <class S, class A>
-S state(const basic_middleware<S, A>& middleware) {
-  return middleware._p->get_state()();
-}
 
 }  // namespace flow

@@ -1,9 +1,11 @@
 #pragma once
 
+#include "common.h"
 #include "disposable.hpp"
 
 namespace flow {
 
+// store
 template <class State, class Action>
 class basic_store {
  public:
@@ -37,15 +39,9 @@ class basic_store {
     return _p->subscribe()(subscriber);
   }
 
-  template <class S, class A>
-  friend std::function<S()> get_state(const basic_store<S, A> &store);
+  std::function<state_t()> get_state() const { return _p->get_state(); }
 
-  template <class S, class A>
-  friend std::function<A(A)> dispatch(const basic_store<S, A> &store);
-
-  template <class S, class A>
-  friend std::function<basic_disposable<>(std::function<void(S)>)> subscribe(
-      const basic_store<S, A> &store);
+  state_t state() const { return _p->get_state()(); }
 
  private:
   struct concept {
@@ -77,21 +73,5 @@ class basic_store {
 
   std::unique_ptr<concept> _p;
 };
-
-template <class S, class A>
-std::function<S()> get_state(const basic_store<S, A> &store) {
-  return store._p->get_state();
-}
-
-template <class S, class A>
-std::function<A(A)> dispatch(const basic_store<S, A> &store) {
-  return store._p->dispatch();
-}
-
-template <class S, class A>
-std::function<basic_disposable<>(std::function<void(S)>)> subscribe(
-    const basic_store<S, A> &store) {
-  return store._p->subscribe();
-}
 
 }  // namespace flow

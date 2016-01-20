@@ -7,4 +7,3 @@
 #include "middleware.hpp"
 #include "store.hpp"
 
-namespace flow {}  // namespace flow

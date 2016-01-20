@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include <type_traits>
 
 namespace flow {
 
@@ -25,17 +27,13 @@ class basic_action {
 
   basic_action &operator=(basic_action &&) = default;
 
-  template <class P, class T, class M>
-  friend T type(const basic_action<P, T, M> &action);
+  type_t type() const { return  _p->type(); }
 
-  template <class P, class T, class M>
-  friend P payload(const basic_action<P, T, M> &action);
+  payload_t payload() const { return  _p->payload(); }
 
-  template <class P, class T, class M>
-  friend bool error(const basic_action<P, T, M> &action);
+  bool error() const { return  _p->error(); }
 
-  template <class P, class T, class M>
-  friend M meta(const basic_action<P, T, M> &action);
+  meta_t meta() const { return _p->meta(); }
 
  private:
   struct concept {
@@ -72,25 +70,6 @@ class basic_action {
   std::unique_ptr<concept> _p;
 };
 
-// action-based concept
-template <class P, class T, class M>
-T type(const basic_action<P, T, M> &action) {
-  return action._p->type();
-}
-
-template <class P, class T, class M>
-P payload(const basic_action<P, T, M> &action) {
-  return action._p->payload();
-}
-
-template <class P, class T, class M>
-bool error(const basic_action<P, T, M> &action) {
-  return action._p->error();
-}
-
-template <class P, class T, class M>
-M meta(const basic_action<P, T, M> &action) {
-  return action._p->meta();
-}
+using action = basic_action<>;
 
 }  // namespace flow

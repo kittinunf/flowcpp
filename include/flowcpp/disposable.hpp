@@ -1,8 +1,12 @@
 #pragma once
 
+#include <functional>
+#include <memory>
+
 namespace flow {
 
-template <class Disposed, class Disposable>
+template <class Disposed = std::function<bool()>,
+          class Disposable = std::function<void()>>
 class basic_disposable {
  public:
   using disposed_t = Disposed;
@@ -23,11 +27,9 @@ class basic_disposable {
 
   basic_disposable &operator=(basic_disposable &&) = default;
 
-  template <class D1, class D2>
-  friend D1 disposed(const basic_disposable<D1, D2> &disposable);
+  disposed_t disposed() const { return _p->disposed(); }
 
-  template <class D1, class D2>
-  friend D2 disposable(const basic_disposable<D1, D2> &disposable);
+  disposable_t disposable() const { return  _p->disposable(); }
 
  private:
   struct concept {
@@ -56,15 +58,6 @@ class basic_disposable {
   std::unique_ptr<concept> _p;
 };
 
-// disposable-based concept
-template <class D1, class D2>
-D1 disposed(const basic_disposable<D1, D2> &disposable) {
-  return disposable._p->disposed();
-}
-
-template <class D1, class D2>
-D2 disposable(const basic_disposable<D1, D2> &disposable) {
-  return disposable._p->disposable();
-}
+using disposable = basic_disposable<>;
 
 }  // namespace flow

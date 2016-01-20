@@ -3,7 +3,6 @@
 #include <experimental/optional>
 #include <unordered_map>
 
-#include "disposable.hpp"
 #include "store.hpp"
 
 namespace flow {

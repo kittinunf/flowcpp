@@ -1,5 +1,11 @@
 #include <iostream>
 
+//#include <flowcpp/action.hpp>
+//#include <flowcpp/apply_middleware.hpp>
+//#include <flowcpp/create_store.hpp>
+//#include <flowcpp/disposable.hpp>
+//#include <flowcpp/middleware.hpp>
+//#include <flowcpp/store.hpp>
 #include <flowcpp/flow.h>
 
 enum class counter_action_type {
@@ -50,7 +56,7 @@ using counter_action = flow::basic_action<int, counter_action_type, void *>;
 
 auto reducer = [](counter_state state, counter_action action) -> counter_state {
   int multiplier = 1;
-  switch (flow::type(action)) {
+  switch (action.type()) {
     case counter_action_type::decrement:
       multiplier = -1;
       break;
@@ -60,7 +66,7 @@ auto reducer = [](counter_state state, counter_action action) -> counter_state {
     case counter_action_type::nothing:
       break;
   }
-  state._counter += multiplier * flow::payload(action);
+  state._counter += multiplier * action.payload();
   return state;
 };
 
@@ -76,13 +82,13 @@ int main() {
 
   s.dispatch(increment_action{2});
 
-  flow::disposable(d)();
+  d.disposable()();
 
   s.dispatch(decrement_action{10});
   s.dispatch(increment_action{3});
   s.dispatch(decrement_action{5});
 
-  std::cout << flow::get_state(s)().to_string() << std::endl;
+  std::cout << s.state().to_string() << std::endl;
 
   return 0;
 }
