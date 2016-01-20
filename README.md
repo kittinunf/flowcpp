@@ -62,7 +62,7 @@ using counter_action = flow::basic_action<int, counter_action_type, void *>;
 
 auto reducer = [](counter_state state, counter_action action) -> counter_state {
   int multiplier = 1;
-  switch (flow::type(action)) {
+  switch (action.type()) {
     case counter_action_type::decrement:
       multiplier = -1;
       break;
@@ -72,32 +72,37 @@ auto reducer = [](counter_state state, counter_action action) -> counter_state {
     case counter_action_type::nothing:
       break;
   }
-  state._counter += multiplier * flow::payload(action);
+  state._counter += multiplier * action.payload();
   return state;
 };
 
-// store
-auto s = flow::create_store_with_action<counter_state, counter_action>(reducer, counter_state(), increment_action{5});
-
 int main() {
-  // disposable
-  auto d = s.subscribe([](counter_state state) { std::cout << state.to_string() << std::endl; });
 
-  // call dispatch to let reducer create new modified state from original state
+  // store
+  // create store with possible initial action (+5)
+  auto s = flow::create_store_with_action<counter_state, counter_action>(
+      reducer, counter_state(), increment_action{5});
+
+  // disposable
+  // subscribe from store to get changes
+  auto d = s.subscribe(
+      [](counter_state state) { std::cout << state.to_string() << std::endl; });
+
+  // dispatch to reducer in order to create new modified state from original state
   s.dispatch(increment_action{2});
 
-  // call dispose to stop subscription, lambda in subscribe block is no longer functioning
-  flow::disposable(d)();
+  // invoke disposable to stop notification from store
+  d.disposable()();
 
   // dispatch more actions
   s.dispatch(decrement_action{10});
   s.dispatch(increment_action{3});
   s.dispatch(decrement_action{5});
 
-  // get state after perform all actions
+  // get state after perform all actions (staring with 5 then + 2 - 10 + 3 - 5)
+  std::cout << s.state().to_string() << std::endl; //print counter: -5
 
-  // actions are starting with 5 then + 2 - 10 + 3 - 5
-  std::cout << flow::get_state(s)().to_string() << std::endl; // print counter: -5
+  return 0;
 }
 ```
 

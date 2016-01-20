@@ -74,7 +74,7 @@ int main() {
 
   // store
   auto s = flow::create_store_with_action<counter_state, counter_action>(
-      reducer, counter_state(), increment_action{10});
+      reducer, counter_state(), increment_action{5});
 
   // disposable
   auto d = s.subscribe(
