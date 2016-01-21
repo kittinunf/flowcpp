@@ -1,11 +1,5 @@
 #include <iostream>
 
-//#include <flowcpp/action.hpp>
-//#include <flowcpp/apply_middleware.hpp>
-//#include <flowcpp/create_store.hpp>
-//#include <flowcpp/disposable.hpp>
-//#include <flowcpp/middleware.hpp>
-//#include <flowcpp/store.hpp>
 #include <flowcpp/flow.h>
 
 enum class counter_action_type {
