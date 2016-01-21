@@ -53,7 +53,7 @@ store_enhancer_t<State, Action> apply_middleware(
           [](dispatch_t<action_t> arg, auto f) { return f(arg); });
 
       return basic_store<state_t, action_t>(
-          store_holder{new_dispatch, subscribe(store), get_state(store)});
+          store_holder{new_dispatch, store.subscribe(), store.get_state()});
     };
   };
 }
