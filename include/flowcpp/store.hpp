@@ -41,6 +41,10 @@ class basic_store {
 
   std::function<state_t()> get_state() const { return _p->get_state(); }
 
+  dispatch_t<action_t> dispatch() const { return _p->dispatch(); }
+
+  subscribe_t<state_t> subscribe() const { return _p->subscribe(); }
+
   state_t state() const { return _p->get_state()(); }
 
  private:
