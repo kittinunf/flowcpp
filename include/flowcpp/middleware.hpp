@@ -5,11 +5,11 @@
 namespace flow {
 
 // middleware
-template <class State, class Action>
+template <class State>
 class basic_middleware {
  public:
   using state_t = State;
-  using action_t = Action;
+  using action_t = action;
 
   template <class T>
   basic_middleware(const T& t) : _p(new concrete<T>(t)) {}
@@ -38,7 +38,7 @@ class basic_middleware {
 
     virtual concept* copy() const = 0;
 
-    virtual dispatch_t<action_t> dispatch() const = 0;
+    virtual dispatch_t dispatch() const = 0;
 
     virtual get_state_t<state_t> get_state() const = 0;
   };
@@ -49,7 +49,7 @@ class basic_middleware {
 
     concept* copy() const override { return new concrete(*this); }
 
-    dispatch_t<action_t> dispatch() const override { return _t.dispatch(); }
+    dispatch_t dispatch() const override { return _t.dispatch(); }
 
     get_state_t<state_t> get_state() const override { return _t.get_state(); }
 
