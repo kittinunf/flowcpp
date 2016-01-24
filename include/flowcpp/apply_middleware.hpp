@@ -15,7 +15,6 @@ store_enhancer_t<State> apply_middleware(
         dispatch_transformer_t(basic_middleware<State>)>>
         transformers) {
   using state_t = State;
-  using action_t = action;
 
   struct middleware_holder {
     dispatch_t dispatch() const { return _dispatch; }
