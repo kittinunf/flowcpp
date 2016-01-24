@@ -6,11 +6,11 @@
 namespace flow {
 
 // store
-template <class State, class Action>
+template <class State>
 class basic_store {
  public:
   using state_t = State;
-  using action_t = Action;
+  using action_t = action;
 
   template <class T>
   basic_store(const T &t) : _p(new concrete<T>(t)) {}
@@ -41,7 +41,7 @@ class basic_store {
 
   std::function<state_t()> get_state() const { return _p->get_state(); }
 
-  dispatch_t<action_t> dispatch() const { return _p->dispatch(); }
+  dispatch_t dispatch() const { return _p->dispatch(); }
 
   subscribe_t<state_t> subscribe() const { return _p->subscribe(); }
 
@@ -55,7 +55,7 @@ class basic_store {
 
     virtual get_state_t<state_t> get_state() const = 0;
 
-    virtual dispatch_t<action_t> dispatch() const = 0;
+    virtual dispatch_t dispatch() const = 0;
 
     virtual subscribe_t<state_t> subscribe() const = 0;
   };
@@ -68,7 +68,7 @@ class basic_store {
 
     get_state_t<state_t> get_state() const override { return _t.get_state(); }
 
-    dispatch_t<action_t> dispatch() const override { return _t.dispatch(); }
+    dispatch_t dispatch() const override { return _t.dispatch(); }
 
     subscribe_t<state_t> subscribe() const override { return _t.subscribe(); }
 

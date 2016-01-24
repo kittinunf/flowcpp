@@ -9,35 +9,35 @@ namespace flow {
 
 namespace __internal {
 
-template <class State, class Action>
-basic_store<State, Action> create_store(
-    std::function<State(State, Action)> reducer, State &&initial_state,
-    std::experimental::optional<Action> initial_action);
+template <class State>
+basic_store<State> create_store(
+    std::function<State(State, action)> reducer, State &&initial_state,
+    std::experimental::optional<action> initial_action);
 }
 
-template <class State, class Action>
-basic_store<State, Action> create_store(
-    std::function<State(State, Action)> reducer, State &&initial_state) {
+template <class State>
+basic_store<State> create_store(
+    std::function<State(State, action)> reducer, State &&initial_state) {
   return __internal::create_store(reducer, std::forward<State>(initial_state),
-                                  std::experimental::optional<Action>());
+                                  std::experimental::optional<action>());
 }
 
-template <class State, class Action>
-basic_store<State, Action> create_store_with_action(
-    std::function<State(State, Action)> reducer, State &&initial_state,
-    Action &&initial_action) {
+template <class State>
+basic_store<State> create_store_with_action(
+    std::function<State(State, action)> reducer, State &&initial_state,
+    action &&initial_action) {
   return __internal::create_store(
       reducer, std::forward<State>(initial_state),
       std::experimental::make_optional(initial_action));
 }
 
 namespace __internal {
-template <class State, class Action>
-basic_store<State, Action> create_store(
-    std::function<State(State, Action)> reducer, State &&initial_state,
-    std::experimental::optional<Action> initial_action) {
+template <class State>
+basic_store<State> create_store(
+    std::function<State(State, action)> reducer, State &&initial_state,
+    std::experimental::optional<action> initial_action) {
   using state_t = State;
-  using action_t = Action;
+  using action_t = action;
 
   // calculate state
   static state_t current_state = (initial_action)
@@ -89,16 +89,16 @@ basic_store<State, Action> create_store(
   };
 
   struct store_holder {
-    dispatch_t<action_t> dispatch() const { return _dispatch; }
+    dispatch_t dispatch() const { return _dispatch; }
     subscribe_t<state_t> subscribe() const { return _subscribe; }
     get_state_t<state_t> get_state() const { return _get_state; };
 
-    dispatch_t<action_t> _dispatch;
+    dispatch_t _dispatch;
     subscribe_t<state_t> _subscribe;
     get_state_t<state_t> _get_state;
   };
 
-  return basic_store<state_t, action_t>(
+  return basic_store<state_t>(
       store_holder{dispatch, subscribe, get_state});
 }
 }

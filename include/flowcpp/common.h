@@ -5,26 +5,24 @@
 
 namespace flow {
 
-template <class State, class Action>
+template <class State>
 class basic_store;
 
-template <class State, class Action>
-using reducer_t = std::function<State(State, Action)>;
+template <class State>
+using reducer_t = std::function<State(State, action)>;
 
-template <class State, class Action>
+template <class State>
 using store_creator_t =
-    std::function<basic_store<State, Action>(reducer_t<State, Action>, State)>;
+    std::function<basic_store<State>(reducer_t<State>, State)>;
 
-template <class State, class Action>
-using store_enhancer_t = std::function<store_creator_t<State, Action>(
-    store_creator_t<State, Action>)>;
+template <class State>
+using store_enhancer_t = std::function<store_creator_t<State>(
+    store_creator_t<State>)>;
 
-template <class Action>
-using dispatch_t = std::function<Action(Action)>;
+using dispatch_t = std::function<action(action)>;
 
-template <class Action>
 using dispatch_transformer_t =
-    std::function<dispatch_t<Action>(dispatch_t<Action>)>;
+  std::function<dispatch_t(dispatch_t)>;
 
 template <class State>
 using get_state_t = std::function<State()>;

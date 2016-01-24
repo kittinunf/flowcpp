@@ -6,19 +6,19 @@
 
 namespace flow {
 
-template <class Payload = std::string, class Type = int, class Meta = void *>
+template<class Payload = std::string, class Type = int, class Meta = void *>
 class basic_action {
  public:
   using payload_t = Payload;
   using type_t = Type;
   using meta_t = Meta;
 
-  template <class T>
-  basic_action(const T &t) : _p(new concrete<T>(t)) {}
+  template<class T>
+  basic_action(const T &t) : _p(new concrete<T>(t)) { }
 
   basic_action(basic_action &&) = default;
 
-  basic_action(const basic_action &action) : _p(action._p->copy()) {}
+  basic_action(const basic_action &action) : _p(action._p->copy()) { }
 
   basic_action &operator=(basic_action action) {
     _p = std::move(action._p);
@@ -27,11 +27,11 @@ class basic_action {
 
   basic_action &operator=(basic_action &&) = default;
 
-  type_t type() const { return  _p->type(); }
+  type_t type() const { return _p->type(); }
 
-  payload_t payload() const { return  _p->payload(); }
+  payload_t payload() const { return _p->payload(); }
 
-  bool error() const { return  _p->error(); }
+  bool error() const { return _p->error(); }
 
   meta_t meta() const { return _p->meta(); }
 
@@ -50,9 +50,9 @@ class basic_action {
     virtual bool error() const = 0;
   };
 
-  template <class T>
-  struct concrete : public concept {
-    explicit concrete(T t) : _t(std::move(t)) {}
+  template<class T>
+  struct concrete: public concept {
+    explicit concrete(T t) : _t(std::move(t)) { }
 
     concept *copy() const override { return new concrete(*this); }
 
@@ -70,6 +70,6 @@ class basic_action {
   std::unique_ptr<concept> _p;
 };
 
-using action = basic_action<>;
+using action = basic_action<const void *, const void *, const void *>;
 
 }  // namespace flow
