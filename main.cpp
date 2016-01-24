@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <functional>
 
 #include <flowcpp/flow.h>
 
@@ -46,7 +45,7 @@ struct counter_state {
   int _counter{0};
 };
 
-std::function<counter_state(counter_state, flow::action)> reducer = [](counter_state state, flow::action action) {
+auto reducer = [](counter_state state, flow::action action) {
   int multiplier = 1;
   auto type = *static_cast<const counter_action_type*>(action.type());
   switch (type) {
@@ -64,11 +63,13 @@ std::function<counter_state(counter_state, flow::action)> reducer = [](counter_s
   return state;
 };
 
-std::function<flow::dispatch_transformer_t(flow::basic_middleware<counter_state>)> logging_middleware = [](flow::basic_middleware<counter_state>) {
+auto logging_middleware = [](flow::basic_middleware<counter_state>) {
   return [=](const flow::dispatch_t& next) {
     return [=](flow::action action) {
-      std::cout << "hello" << std::endl;
-      return next(action);
+      std::cout << "before dispatch" << std::endl;
+      auto next_action = next(action);
+      std::cout << "after dispatch" << std::endl;
+      return next_action;
     };
   };
 };
@@ -79,21 +80,22 @@ int main() {
   auto s = flow::create_store_with_action<counter_state>(reducer, counter_state(), increment_action{10});
 
   // create store with middleware
-  auto ms = flow::apply_middleware<counter_state>({logging_middleware})(
-  std::bind(flow::create_store<counter_state>, std::placeholders::_1, std::placeholders::_2))(reducer, counter_state());
+//  auto s = flow::apply_middleware<counter_state>({logging_middleware})(
+//  std::bind(flow::create_store<counter_state>, std::placeholders::_1, std::placeholders::_2))(reducer, counter_state());
 
   // disposable
   auto d = s.subscribe([](counter_state state) { std::cout << state.to_string() << std::endl; });
 
   s.dispatch(increment_action{2});
 
-  d.disposable()();
 
   s.dispatch(decrement_action{10});
   s.dispatch(increment_action{3});
+
+  d.disposable()();
   s.dispatch(decrement_action{5});
 
-  std::cout << s.state().to_string() << std::endl;
+  std::cout << "finish: " << s.state().to_string() << std::endl;
 
   return 0;
 }
