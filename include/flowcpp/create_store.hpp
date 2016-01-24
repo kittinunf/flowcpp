@@ -17,7 +17,7 @@ basic_store<State> create_store(
 
 template <class State>
 basic_store<State> create_store(
-    std::function<State(State)> reducer, State &&initial_state) {
+    std::function<State(State, action)> reducer, State &&initial_state) {
   return __internal::create_store(reducer, std::forward<State>(initial_state),
                                   std::experimental::optional<action>());
 }
