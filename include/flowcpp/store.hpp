@@ -26,15 +26,15 @@ class basic_store {
 
   basic_store &operator=(basic_store &&) = default;
 
-  action_t dispatch(std::function<action_t()> action) {
+  action_t dispatch(std::function<action_t()> action) const {
     return _p->dispatch()(action());
   }
 
-  action_t dispatch(action_t action) {
+  action_t dispatch(action_t action) const {
     return _p->dispatch()(action);
   }
 
-  basic_disposable<> subscribe(state_subscribe_t<state_t> subscriber) {
+  basic_disposable<> subscribe(state_subscribe_t<state_t> subscriber) const {
     subscriber(_p->get_state()());
     return _p->subscribe()(subscriber);
   }

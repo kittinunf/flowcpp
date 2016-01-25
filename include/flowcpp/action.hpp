@@ -6,7 +6,7 @@
 
 namespace flow {
 
-template<class Payload = std::string, class Type = int, class Meta = void *>
+template<class Payload = const void*, class Type = const void*, class Meta = const void*>
 class basic_action {
  public:
   using payload_t = Payload;
@@ -70,6 +70,6 @@ class basic_action {
   std::unique_ptr<concept> _p;
 };
 
-using action = basic_action<const void *, const void *, const void *>;
+using action = basic_action<>;
 
 }  // namespace flow
