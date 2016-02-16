@@ -74,8 +74,8 @@ int main() {
   auto s = flow::create_store_with_action<counter_state>(reducer, counter_state(), increment_action{10});
 
   // create store with middleware
-//  auto s = flow::apply_middleware<counter_state>({logging_middleware})(
-//  std::bind(flow::create_store<counter_state>, std::placeholders::_1, std::placeholders::_2))(reducer, counter_state());
+  auto ms = flow::apply_middleware<counter_state>({logging_middleware})(
+  std::bind(flow::create_store<counter_state>, std::placeholders::_1, std::placeholders::_2))(reducer, counter_state());
 
   // disposable
   auto d = s.subscribe([](counter_state state) { std::cout << state.to_string() << std::endl; });
