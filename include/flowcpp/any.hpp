@@ -24,7 +24,10 @@ class any {
     return *this;
   }
 
-  any& operator=(any&& other) = default;
+  any& operator=(any&& other) {
+    _p = std::move(other._p);
+    return *this;
+  }
 
   template<class T>
   T &as() {
