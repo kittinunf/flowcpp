@@ -4,9 +4,11 @@
 #include <memory>
 #include <type_traits>
 
+#include "any.hpp"
+
 namespace flow {
 
-template<class Payload = const void*, class Type = const void*, class Meta = const void*>
+template<class Payload = flow::any, class Type = flow::any, class Meta = flow::any>
 class basic_action {
  public:
   using payload_t = Payload;
