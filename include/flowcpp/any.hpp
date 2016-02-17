@@ -21,7 +21,7 @@ class any {
     return *this;
   }
 
-  any &operator=(any other) {
+  any& operator=(any other) {
     _p = std::move(other._p);
     return *this;
   }
