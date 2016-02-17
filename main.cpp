@@ -15,7 +15,7 @@ struct increment_action {
 
   int _payload = {1};
   counter_action_type _type = {counter_action_type::increment};
-  void *_meta = nullptr;
+  flow::any _meta;
   bool _error = false;
 };
 
@@ -27,7 +27,7 @@ struct decrement_action {
 
   int _payload = {1};
   counter_action_type _type = {counter_action_type::decrement};
-  void *_meta = nullptr;
+  flow::any _meta;
   bool _error = false;
 };
 
@@ -58,7 +58,7 @@ auto reducer = [](counter_state state, flow::action action) {
 };
 
 auto logging_middleware = [](flow::basic_middleware<counter_state>) {
-  return [=](flow::dispatch_t& next) {
+  return [=](flow::dispatch_t next) {
     return [=](flow::action action) {
       std::cout << "before dispatch" << std::endl;
       auto next_action = next(action);

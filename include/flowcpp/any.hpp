@@ -8,7 +8,9 @@ class any {
  public:
   any() = default;
 
-  any(const any &other) : _p(other._p->copy()) { }
+  any(const any &other) {
+    if (other._p) _p = std::unique_ptr<concept>(other._p->copy());
+  }
 
   template<class T>
   any(const T &t) : _p(new concrete<T>(t)) { }
