@@ -1,5 +1,5 @@
 # flowcpp
-Redux Implemenation in C++14 - a predictable state container for C++.
+Redux Implementation in C++14 - a predictable state container for C++.
 
 # Introduction
 flowcpp is a C++ header-only implementation of the JavaScript Redux library by Dan Abramov and the Community.
