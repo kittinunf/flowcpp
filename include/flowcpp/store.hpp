@@ -31,31 +31,27 @@ class basic_store {
     return _subscribing(subscriber);
   }
 
-  dispatch_t dispatch() const { return _dispatcher; }
-
-  get_state_t<state_t> get_state() const { return [this]() { return _current_state; }; }
-
-  subscribe_t<state_t> subscribe() const { return _subscribing; }
-
   state_t state() const { return _current_state; }
+
+  template<class S>
+  friend basic_store<S> create_store(std::function<S(S, action)> reducer, const S &initial_state);
+
+  template<class S>
+  friend basic_store<S> create_store_with_action(std::function<S(S, action)> reducer, const S &initial_state,
+                                                 const action &initial_action);
+
+  template<class S>
+  friend basic_store<S> apply_middleware(reducer_t<S> reducer,
+                                     const S& state,
+                                     std::initializer_list<std::function<dispatch_transformer_t(basic_middleware<S>)>>
+                                     transformers);
 
  private:
 
   static basic_store<state_t> create(const std::function<state_t(state_t, action)> reducer, const state_t initial_state,
                                      const std::experimental::optional<action> initial_action) {
-    return basic_store<state_t>(reducer, initial_state);
-  }
-
-  basic_store(reducer_t <state_t> reducer, state_t initial_state, dispatch_t dispatcher)
-      : _reducer(reducer), _current_state(initial_state), _dispatcher(dispatcher) {
-    _subscribing = [&](state_subscribe_t<state_t> subscriber) -> basic_disposable<> {
-      int id = _next_id++;
-      _subscribers[id] = subscriber;
-
-      return basic_disposable<>{
-          disposable_holder{[this, id]() { return _subscribers.find(id) == std::end(_subscribers); },
-                            [this, id]() { _subscribers.erase(id); }}};
-    };
+    auto state = (initial_action) ? reducer(initial_state, *initial_action) : initial_state;
+    return basic_store<state_t>(reducer, state);
   }
 
   basic_store(reducer_t <state_t> reducer, state_t initial_state)
@@ -87,6 +83,22 @@ class basic_store {
     };
   }
 
+  basic_store(reducer_t<state_t> reducer, state_t initial_state,
+              std::initializer_list<std::function<dispatch_transformer_t(basic_middleware<state_t>)>> transformer)
+      : basic_store(reducer, initial_state) {
+
+    _dispatcher =
+        std::accumulate(std::begin(transformer), std::end(transformer), _dispatcher, [&](dispatch_t acc, auto f) -> dispatch_t {
+          auto middleware = basic_middleware<state_t>{
+              middleware_holder{_dispatcher, [&]() { return _current_state; }}
+          };
+
+          auto dispatch_transformer = f(middleware);
+
+          return dispatch_transformer(acc);
+        });
+  }
+
   std::function<state_t(state_t, action)> _reducer;
   state_t _current_state;
   int _next_id{0};
@@ -94,32 +106,25 @@ class basic_store {
   bool _is_dispatching{false};
 
   dispatch_t _dispatcher;
-
-  using disposed_t = std::function<bool()>;
-  using disposable_t = std::function<void()>;
-
-  struct disposable_holder {
-    disposed_t disposed() const { return _disposed; }
-    disposable_t disposable() const { return _disposer; }
-
-    disposed_t _disposed;
-    disposable_t _disposer;
-  };
-
   subscribe_t <state_t> _subscribing;
 
-  template <class S>
-  friend basic_store<S> create_store(std::function<S(S, action)> reducer, const S &initial_state);
+  //helpers
+  struct disposable_holder {
+    basic_disposable<>::disposed_t disposed() const { return _disposed; }
+    basic_disposable<>::disposable_t disposable() const { return _disposer; }
 
-  template <class S>
-  friend basic_store<S> create_store_with_action(std::function<S(S, action)> reducer, const S &initial_state,
-                               const action &initial_action);
+    basic_disposable<>::disposed_t _disposed;
+    basic_disposable<>::disposable_t _disposer;
+  };
 
-  template <class S>
-  friend store_enhancer_t<S> apply_middleware(std::initializer_list<std::function<dispatch_transformer_t(basic_middleware<S>)>>
-        transformers);
+  struct middleware_holder {
+    dispatch_t dispatch() const { return _dispatch; }
+    get_state_t <state_t> get_state() const { return _get_state; }
+
+    dispatch_t _dispatch;
+    get_state_t <state_t> _get_state;
+  };
 
 };
-
 
 }  // namespace flow
