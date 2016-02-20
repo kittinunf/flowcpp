@@ -52,6 +52,7 @@ auto reducer = [](counter_state state, flow::action action) {
     default:
       break;
   }
+
   auto payload = action.payload().as<int>();
   state._counter += multiplier * payload;
   return state;

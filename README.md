@@ -15,7 +15,8 @@ A direct translation from original with slight modification [gist](https://githu
 #include <flowcpp/flow.h>
 
 enum class counter_action_type {
-  nothing, increment, decrement
+  increment,
+  decrement,
 };
 
 struct increment_action {
@@ -26,7 +27,7 @@ struct increment_action {
 
   int _payload = {1};
   counter_action_type _type = {counter_action_type::increment};
-  void *_meta = nullptr;
+  flow::any _meta;
   bool _error = false;
 };
 
@@ -38,14 +39,12 @@ struct decrement_action {
 
   int _payload = {1};
   counter_action_type _type = {counter_action_type::decrement};
-  void *_meta = nullptr;
+  flow::any _meta;
   bool _error = false;
 };
 
 struct counter_state {
-  std::string to_string() {
-    return "counter: " + std::to_string(_counter);
-  }
+  std::string to_string() { return "counter: " + std::to_string(_counter); }
 
   int _counter{0};
 };
@@ -60,7 +59,7 @@ auto reducer = [](counter_state state, flow::action action) {
     case counter_action_type::increment:
       multiplier = 1;
       break;
-    case counter_action_type::nothing:
+    default:
       break;
   }
   auto payload = action.payload().as<int>();
@@ -69,38 +68,32 @@ auto reducer = [](counter_state state, flow::action action) {
 };
 
 auto logging_middleware = [](flow::basic_middleware<counter_state>) {
-  return [=](flow::dispatch_t& next) {
+  return [=](const flow::dispatch_t &next) {
     return [=](flow::action action) {
-      std::cout << "before dispatch" << std::endl;
+      std::cout << "before dispatch " << endl;
       auto next_action = next(action);
-      std::cout << "after dispatch" << std::endl;
+      std::cout << "after dispatch " << endl;
       return next_action;
     };
   };
 };
 
 int main() {
+  auto store = flow::create_store_with_action<counter_state>(reducer, counter_state{}, increment_action{5});
 
-  // store
-  auto s = flow::create_store_with_action<counter_state>(reducer, counter_state(), increment_action{10});
+  //for store with add-on middlewares
+  auto store_with_middleware = flow::apply_middleware<counter_state>(
+      reducer, counter_state(), {flow::thunk_middleware<counter_state, counter_action_type>});
 
-  // create store with middleware
-  auto ms = flow::apply_middleware<counter_state>({logging_middleware})(
-  std::bind(flow::create_store<counter_state>, std::placeholders::_1, std::placeholders::_2))(reducer, counter_state());
+  auto disposable = store.subscribe([](counter_state state) { std::cout << state.to_string() << std::endl; });
 
-  // disposable
-  auto d = s.subscribe([](counter_state state) { std::cout << state.to_string() << std::endl; });
+  store.dispatch(increment_action{2});
+  store.dispatch(decrement_action{10});
+  disposable.dispose();  // call dispose to stop notification prematurely
+  store.dispatch(increment_action{3});
+  store.dispatch(decrement_action{6});
 
-  s.dispatch(increment_action{2});
-  d.disposable()();
-
-  s.dispatch(decrement_action{10});
-  s.dispatch(increment_action{3});
-
-  s.dispatch(decrement_action{5});
-
-  std::cout << "finish: " << s.state().to_string() << std::endl;
-
+  std::cout << store.state().to_string() << std::endl;
   return 0;
 }
 ```
