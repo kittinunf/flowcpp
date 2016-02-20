@@ -1,7 +1,11 @@
 #pragma once
 
+#include <experimental/optional>
+#include <unordered_map>
+
 #include "common.h"
 #include "disposable.hpp"
+#include "middleware.hpp"
 
 namespace flow {
 
@@ -12,70 +16,102 @@ class basic_store {
   using state_t = State;
   using action_t = action;
 
-  template <class T>
-  basic_store(const T &t) : _p(new concrete<T>(t)) {}
+  basic_store() = delete;
 
-  basic_store(basic_store &&) = default;
+  action_t dispatch(std::function<action_t()> action_creator) { return _dispatcher(action_creator()); }
 
-  basic_store(const basic_store &store) : _p(store._p->copy()) {}
-
-  basic_store &operator=(basic_store store) {
-    _p = move(store._p);
-    return *this;
-  }
-
-  basic_store &operator=(basic_store &&) = default;
-
-  action_t dispatch(std::function<action_t()> action) const {
-    return _p->dispatch()(action());
-  }
-
-  action_t dispatch(action_t action) const {
-    return _p->dispatch()(action);
-  }
+  action_t dispatch(action_t action) { return _dispatcher(action); }
 
   basic_disposable<> subscribe(state_subscribe_t<state_t> subscriber) const {
-    subscriber(_p->get_state()());
-    return _p->subscribe()(subscriber);
+    subscriber(_current_state);
+    return _subscribing(subscriber);
   }
 
-  std::function<state_t()> get_state() const { return _p->get_state(); }
+  state_t state() const { return _current_state; }
 
-  dispatch_t dispatch() const { return _p->dispatch(); }
+  template <class S>
+  friend basic_store<S> create_store(std::function<S(S, action)> reducer, const S &initial_state);
 
-  subscribe_t<state_t> subscribe() const { return _p->subscribe(); }
+  template <class S>
+  friend basic_store<S> create_store_with_action(std::function<S(S, action)> reducer, const S &initial_state,
+                                                 const action &initial_action);
 
-  state_t state() const { return _p->get_state()(); }
+  template <class S>
+  friend basic_store<S> apply_middleware(
+      reducer_t<S> reducer, const S &state,
+      std::initializer_list<std::function<dispatch_transformer_t(basic_middleware<S>)>> transformers);
 
  private:
-  struct concept {
-    virtual ~concept() = default;
+  static basic_store<state_t> create(const std::function<state_t(state_t, action)> reducer, const state_t initial_state,
+                                     const std::experimental::optional<action> initial_action) {
+    auto state = (initial_action) ? reducer(initial_state, *initial_action) : initial_state;
+    return basic_store<state_t>(reducer, state);
+  }
 
-    virtual concept *copy() const = 0;
+  basic_store(reducer_t<state_t> reducer, state_t initial_state) : _reducer(reducer), _current_state(initial_state) {
+    _dispatcher = [&](action_t action) -> action_t {
 
-    virtual get_state_t<state_t> get_state() const = 0;
+      if (_is_dispatching) {
+        return action;
+      }
 
-    virtual dispatch_t dispatch() const = 0;
+      _is_dispatching = true;
+      _current_state = _reducer(_current_state, action);
+      _is_dispatching = false;
 
-    virtual subscribe_t<state_t> subscribe() const = 0;
+      std::for_each(std::begin(_subscribers), std::end(_subscribers),
+                    [&](const auto &pair) { pair.second(_current_state); });
+      return action;
+    };
+
+    _subscribing = [&](state_subscribe_t<state_t> subscriber) -> basic_disposable<> {
+      int id = _next_id++;
+      _subscribers[id] = subscriber;
+
+      return basic_disposable<>{
+          disposable_holder{[this, id]() { return _subscribers.find(id) == std::end(_subscribers); },
+                            [this, id]() { _subscribers.erase(id); }}};
+    };
+  }
+
+  basic_store(reducer_t<state_t> reducer, state_t initial_state,
+              std::initializer_list<std::function<dispatch_transformer_t(basic_middleware<state_t>)>> transformer)
+      : basic_store(reducer, initial_state) {
+    _dispatcher = std::accumulate(
+        std::begin(transformer), std::end(transformer), _dispatcher, [&](dispatch_t acc, auto f) -> dispatch_t {
+          auto middleware = basic_middleware<state_t>{middleware_holder{_dispatcher, [&]() { return _current_state; }}};
+
+          auto dispatch_transformer = f(middleware);
+
+          return dispatch_transformer(acc);
+        });
+  }
+
+  std::function<state_t(state_t, action)> _reducer;
+  state_t _current_state;
+  int _next_id{0};
+  std::unordered_map<int, state_subscribe_t<state_t>> _subscribers;
+  bool _is_dispatching{false};
+
+  dispatch_t _dispatcher;
+  subscribe_t<state_t> _subscribing;
+
+  // helpers
+  struct disposable_holder {
+    basic_disposable<>::disposed_t disposed() const { return _disposed; }
+    basic_disposable<>::disposable_t disposable() const { return _disposer; }
+
+    basic_disposable<>::disposed_t _disposed;
+    basic_disposable<>::disposable_t _disposer;
   };
 
-  template <class T>
-  struct concrete : public concept {
-    explicit concrete(T t) : _t(std::move(t)) {}
+  struct middleware_holder {
+    dispatch_t dispatch() const { return _dispatch; }
+    get_state_t<state_t> get_state() const { return _get_state; }
 
-    concept *copy() const override { return new concrete(*this); }
-
-    get_state_t<state_t> get_state() const override { return _t.get_state(); }
-
-    dispatch_t dispatch() const override { return _t.dispatch(); }
-
-    subscribe_t<state_t> subscribe() const override { return _t.subscribe(); }
-
-    T _t;
+    dispatch_t _dispatch;
+    get_state_t<state_t> _get_state;
   };
-
-  std::unique_ptr<concept> _p;
 };
 
 }  // namespace flow

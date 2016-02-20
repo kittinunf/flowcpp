@@ -3,11 +3,11 @@
 namespace flow {
 
 template <class State>
-using thunk_t = std::function<void(const flow::dispatch_t, const std::function<State()>)>;
+using thunk_t = std::function<void(const flow::dispatch_t, const flow::get_state_t<State>)>;
 
-template<class State,class ActionType>
+template <class State, class ActionType>
 auto thunk_middleware = [](flow::basic_middleware<State> middleware) {
-  return [=](const flow::dispatch_t& dispatch) {
+  return [=](const flow::dispatch_t &dispatch) {
     return [=](flow::action action) -> flow::action {
       auto type = action.type().as<ActionType>();
       if (type == ActionType::thunk) {
@@ -19,7 +19,7 @@ auto thunk_middleware = [](flow::basic_middleware<State> middleware) {
   };
 };
 
-template<class State,class ActionType>
+template <class State, class ActionType>
 struct thunk_action {
   flow::any payload() const { return _payload; }
   flow::any type() const { return _type; }
@@ -32,4 +32,4 @@ struct thunk_action {
   bool _error = false;
 };
 
-} // namespace flow
+}  // namespace flow

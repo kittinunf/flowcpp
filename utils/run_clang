@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+shopt -s nullglob
+
+git diff --name-only HEAD | grep ".*\.[c|h][p][p]" | xargs -I {} utils/clang-format -i -style=file "{}"

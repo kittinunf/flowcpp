@@ -4,7 +4,9 @@
 #include <flowcpp/flow.h>
 
 enum class counter_action_type {
-  nothing, thunk, increment, decrement,
+  thunk,
+  increment,
+  decrement,
 };
 
 struct increment_action {
@@ -32,9 +34,7 @@ struct decrement_action {
 };
 
 struct counter_state {
-  std::string to_string() {
-    return "counter: " + std::to_string(_counter);
-  }
+  std::string to_string() { return "counter: " + std::to_string(_counter); }
 
   int _counter{0};
 };
@@ -52,66 +52,75 @@ auto reducer = [](counter_state state, flow::action action) {
     default:
       break;
   }
-  auto payload = action.payload().as<const int>();
+
+  auto payload = action.payload().as<int>();
   state._counter += multiplier * payload;
   return state;
 };
 
+std::string to_string(counter_action_type type) {
+  switch (type) {
+    case counter_action_type::increment:
+      return "inc";
+    case counter_action_type::decrement:
+      return "dec";
+    case counter_action_type::thunk:
+      return "thunk";
+  }
+}
+
 auto logging_middleware = [](flow::basic_middleware<counter_state>) {
-  return [=](const flow::dispatch_t& next) {
+  return [=](const flow::dispatch_t &next) {
     return [=](flow::action action) {
-      std::cout << "before dispatch" << std::endl;
       auto next_action = next(action);
-      std::cout << "after dispatch" << std::endl;
+      std::cout << "after dispatch: " << to_string(action.type().as<counter_action_type>()) << std::endl;
       return next_action;
     };
   };
 };
 
-void simple_example(){
-  std::cout << "simple example" << std::endl;
+void simple_example() {
+  std::cout << "Start: Simple example" << std::endl;
 
-  auto store = flow::create_store_with_action<counter_state>(reducer, counter_state(), increment_action{10});
-  
-  // create store with middleware
-  // auto store = flow::apply_middleware<counter_state>({logging_middleware})(
-  // std::bind(flow::create_store<counter_state>, std::placeholders::_1, std::placeholders::_2))(reducer, counter_state());
+  auto store = flow::create_store_with_action<counter_state>(reducer, counter_state{}, increment_action{5});
 
   auto disposable = store.subscribe([](counter_state state) { std::cout << state.to_string() << std::endl; });
 
   store.dispatch(increment_action{2});
-
   store.dispatch(decrement_action{10});
+  disposable.dispose();  // call dispose to stop notification prematurely
   store.dispatch(increment_action{3});
+  store.dispatch(decrement_action{6});
 
-  disposable.disposable()();
-  store.dispatch(decrement_action{5});
-
-  std::cout << "finish: " << store.state().to_string() << "\n\n";
+  std::cout << "End: Simple example " << store.state().to_string() << std::endl;
 }
 
-void thunk_middleware_example(){
-  std::cout << "thunk middleware example" << std::endl;
+void thunk_middleware_example() {
+  std::cout << "Start: Thunk Middleware example" << std::endl;
 
-  auto store = flow::apply_middleware<counter_state>({flow::thunk_middleware<counter_state,counter_action_type>})
-                (flow::create_store<counter_state>)
-                  (reducer, counter_state());
+  auto store = flow::apply_middleware<counter_state>(
+      reducer, counter_state(), {flow::thunk_middleware<counter_state, counter_action_type>, logging_middleware});
 
   std::cout << store.state().to_string() << std::endl;
 
-  store.dispatch(flow::thunk_action<counter_state,counter_action_type>{ 
-    [&](auto dispatch, auto get_state){
-        dispatch(increment_action{3});
-        std::cout << get_state().to_string() << std::endl;
-        dispatch(decrement_action{10});
-        std::cout << get_state().to_string() << std::endl;
-    }});
+  store.dispatch(flow::thunk_action<counter_state, counter_action_type>{[&](auto dispatch, auto get_state) {
+    dispatch(increment_action{1});
+    dispatch(decrement_action{2});
+    dispatch(increment_action{3});
+  }});
+
+  store.dispatch(flow::thunk_action<counter_state, counter_action_type>{[&](auto dispatch, auto get_state) {
+    dispatch(increment_action{4});
+    dispatch(decrement_action{5});
+    dispatch(increment_action{6});
+  }});
+
+  std::cout << "End: Thunk Middleware example " << store.state().to_string() << std::endl;
 }
 
 int main() {
   simple_example();
+  std::cout << "------------------------------" << std::endl;
   thunk_middleware_example();
   return 0;
 }
-
-
