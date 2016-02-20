@@ -31,6 +31,8 @@ class basic_disposable {
 
   disposable_t disposable() const { return  _p->disposable(); }
 
+  void dispose() const { _p->disposable()(); }
+
  private:
   struct concept {
     virtual ~concept() = default;

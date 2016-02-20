@@ -69,43 +69,40 @@ auto logging_middleware = [](flow::basic_middleware<counter_state>) {
 };
 
 void simple_example(){
-  std::cout << "simple example" << std::endl;
+  std::cout << "Start: Simple example" << std::endl;
 
-  auto store = flow::create_store_with_action<counter_state>(reducer, counter_state(), increment_action{10});
-  
-  // create store with middleware
-  // auto store = flow::apply_middleware<counter_state>({logging_middleware})(
-  // std::bind(flow::create_store<counter_state>, std::placeholders::_1, std::placeholders::_2))(reducer, counter_state());
+  auto store = flow::create_store_with_action<counter_state>(reducer, counter_state{}, increment_action{5});
 
   auto disposable = store.subscribe([](counter_state state) { std::cout << state.to_string() << std::endl; });
 
   store.dispatch(increment_action{2});
 
   store.dispatch(decrement_action{10});
+  disposable.dispose(); //call dispose to stop notification prematurely
   store.dispatch(increment_action{3});
 
-  disposable.disposable()();
-  store.dispatch(decrement_action{5});
+  store.dispatch(decrement_action{15});
 
-  std::cout << "finish: " << store.state().to_string() << "\n\n";
+  std::cout << "End: Simple example " << store.state().to_string() << std::endl;
 }
 
 void thunk_middleware_example(){
-  std::cout << "thunk middleware example" << std::endl;
+  std::cout << "Start: Thunk Middleware example" << std::endl;
 
   auto store = flow::apply_middleware<counter_state>({flow::thunk_middleware<counter_state,counter_action_type>})
-                (flow::create_store<counter_state>)
-                  (reducer, counter_state());
+                (flow::create_store<counter_state>)(reducer, counter_state());
 
   std::cout << store.state().to_string() << std::endl;
 
-  store.dispatch(flow::thunk_action<counter_state,counter_action_type>{ 
-    [&](auto dispatch, auto get_state){
-        dispatch(increment_action{3});
-        std::cout << get_state().to_string() << std::endl;
-        dispatch(decrement_action{10});
-        std::cout << get_state().to_string() << std::endl;
-    }});
+//  store.dispatch(flow::thunk_action<counter_state,counter_action_type>{
+//    [&](auto dispatch, auto get_state){
+//        dispatch(increment_action{3});
+//        std::cout << get_state().to_string() << std::endl;
+//        dispatch(decrement_action{10});
+//        std::cout << get_state().to_string() << std::endl;
+//    }});
+
+  std::cout << "End: Thunk Middleware example " << store.state().to_string() << std::endl;
 }
 
 int main() {

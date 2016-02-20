@@ -9,12 +9,11 @@
 
 namespace flow {
 
-template <class State>
-store_enhancer_t<State> apply_middleware(
-    std::initializer_list<std::function<
-        dispatch_transformer_t(basic_middleware<State>)>>
-        transformers) {
-  using state_t = State;
+template<class S>
+store_enhancer_t<S> apply_middleware(std::initializer_list<std::function<dispatch_transformer_t(basic_middleware<S>)>>
+                                     transformers) {
+
+  using state_t = S;
 
   struct middleware_holder {
     dispatch_t dispatch() const { return _dispatch; }
@@ -24,18 +23,8 @@ store_enhancer_t<State> apply_middleware(
     get_state_t<state_t> _get_state;
   };
 
-  struct store_holder {
-    dispatch_t dispatch() const { return _dispatch; }
-    subscribe_t<state_t> subscribe() const { return _subscribe; }
-    get_state_t<state_t> get_state() const { return _get_state; };
-
-    dispatch_t _dispatch;
-    subscribe_t<state_t> _subscribe;
-    get_state_t<state_t> _get_state;
-  };
-
   return [=](store_creator_t<state_t> next) {
-    return [=](reducer_t<state_t> reducer, state_t state) {
+    return [=](reducer_t <state_t> reducer, state_t state) {
 
       auto store = next(reducer, state);
 
@@ -51,8 +40,7 @@ store_enhancer_t<State> apply_middleware(
           rbegin(chain), rend(chain), store.dispatch(),
           [](dispatch_t arg, auto f) { return f(arg); });
 
-      return basic_store<state_t>(
-          store_holder{new_dispatch, store.subscribe(), store.get_state()});
+      return basic_store<state_t>(store._reducer, store.state(), new_dispatch);
     };
   };
 }
