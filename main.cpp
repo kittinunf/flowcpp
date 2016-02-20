@@ -52,7 +52,7 @@ auto reducer = [](counter_state state, flow::action action) {
     default:
       break;
   }
-  auto payload = action.payload().as<const int>();
+  auto payload = action.payload().as<int>();
   state._counter += multiplier * payload;
   return state;
 };
@@ -89,7 +89,6 @@ void simple_example() {
   store.dispatch(decrement_action{10});
   disposable.dispose(); //call dispose to stop notification prematurely
   store.dispatch(increment_action{3});
-
   store.dispatch(decrement_action{6});
 
   std::cout << "End: Simple example " << store.state().to_string() << std::endl;
@@ -100,7 +99,7 @@ void thunk_middleware_example() {
 
   auto store = flow::apply_middleware<counter_state>(reducer,
                                                      counter_state(),
-                                                     {logging_middleware, flow::thunk_middleware<counter_state, counter_action_type>});
+                                                     {flow::thunk_middleware<counter_state, counter_action_type>, logging_middleware});
 
   std::cout << store.state().to_string() << std::endl;
 
