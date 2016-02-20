@@ -5,8 +5,7 @@
 
 namespace flow {
 
-template <class Disposed = std::function<bool()>,
-          class Disposable = std::function<void()>>
+template <class Disposed = std::function<bool()>, class Disposable = std::function<void()>>
 class basic_disposable {
  public:
   using disposed_t = Disposed;
@@ -17,8 +16,7 @@ class basic_disposable {
 
   basic_disposable(basic_disposable &&) = default;
 
-  basic_disposable(const basic_disposable &disposable)
-      : _p(disposable._p->copy()) {}
+  basic_disposable(const basic_disposable &disposable) : _p(disposable._p->copy()) {}
 
   basic_disposable &operator=(basic_disposable disposable) {
     _p = move(disposable._p);
@@ -29,7 +27,7 @@ class basic_disposable {
 
   disposed_t disposed() const { return _p->disposed(); }
 
-  disposable_t disposable() const { return  _p->disposable(); }
+  disposable_t disposable() const { return _p->disposable(); }
 
   void dispose() const { _p->disposable()(); }
 

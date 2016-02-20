@@ -16,8 +16,7 @@ class basic_middleware {
 
   basic_middleware(basic_middleware&& middleware) = default;
 
-  basic_middleware(const basic_middleware& middleware)
-      : _p(middleware._p->copy()) {}
+  basic_middleware(const basic_middleware& middleware) : _p(middleware._p->copy()) {}
 
   basic_middleware& operator=(basic_middleware middleware) {
     _p = std::move(middleware._p);
