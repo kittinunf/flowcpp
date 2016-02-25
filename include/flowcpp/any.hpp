@@ -36,6 +36,8 @@ class any {
     return static_cast<concrete<T> *>(_p.get())->_t;
   }
 
+  operator bool() const { (_p)? true : false; }
+
  private:
   struct concept {
     virtual ~concept() = default;
