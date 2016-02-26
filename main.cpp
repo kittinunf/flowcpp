@@ -79,6 +79,139 @@ auto logging_middleware = [](flow::basic_middleware<counter_state>) {
   };
 };
 
+
+void reselect_example() {
+  std::cout << "Start: Selector example" << std::endl;
+
+  struct State{
+    int first_number;
+    int second_number;
+  };
+
+  auto first_number_selector = flow::selector<State, int>{ [](auto state){
+      return state.first_number;
+    }};
+
+  auto second_number_selector = flow::selector<State, int>{ [](auto state){
+      return state.second_number;
+    }};
+
+  auto show_multiply_func = flow::result_func<std::string, int, int>{ [](auto params){
+      auto a = std::get<0>(params);
+      auto b = std::get<1>(params);
+      return std::to_string(a) + " x " + std::to_string(b) + " = " + std::to_string(a*b);
+    }};
+
+  // Default memoize
+  // auto int_equals = flow::equality_check<int>{ [](auto left, auto right){
+  //   return left == right;
+  // }};
+  // auto equality_checks = std::make_tuple(int_equals, int_equals);
+  // auto memoize = flow::default_memoize<std::string, int, int>(equality_checks);  
+
+  // Map memoize
+  auto int_key = flow::map_string_key<int>{ [](auto x){
+    return std::to_string(x);
+  }};
+  auto keys = std::make_tuple(int_key, int_key);
+  auto memoize = flow::map_memoize<std::string, int, int>(keys);
+
+  //
+  auto show_multiply_selector = 
+          flow::create_selector(
+            std::make_tuple(first_number_selector, second_number_selector), 
+            show_multiply_func, 
+            memoize);
+
+  // Initialize State
+  auto state = State();
+  state.first_number = 2;
+  state.second_number= 4;
+
+  // Result
+  auto result_1 = show_multiply_selector(state);
+  std::cout << result_1 << std::endl;
+
+  state.second_number = 5;
+  auto result_2 = show_multiply_selector(state);
+  std::cout << result_2 << std::endl;
+
+  state.second_number = 5;
+  auto result_3 = show_multiply_selector(state);
+  std::cout << result_3 << std::endl;
+
+  state.first_number = 10;
+  auto result_4 = show_multiply_selector(state);
+  std::cout << result_4 << std::endl;
+
+  auto result_5 = show_multiply_selector(state);
+  std::cout << result_5 << std::endl;
+
+  state.first_number = 2;
+  state.second_number = 4;
+  auto result_6 = show_multiply_selector(state);
+  std::cout << result_6 << std::endl;
+}
+
+void combine_selector(){
+  std::cout << "Start: Combine selector example" << std::endl;
+
+  struct SubState{
+    int sub_id;
+  };
+
+  struct RootState{
+    int id;
+    SubState sub_state;
+  };
+
+  // Create First Selector
+  auto id_selector = flow::selector<RootState, int>{[](auto state){ return state.id; }};
+  auto sub_id_selector = flow::selector<RootState, int>{[](auto state){ return state.sub_state.sub_id; }};
+
+  auto result_func = flow::result_func<std::string, int, int>{ [](auto params){
+      auto id = std::get<0>(params);
+      auto sub_id = std::get<1>(params);
+      return "id = " + std::to_string(id) + ", sub_id = " + std::to_string(sub_id);
+    }};
+
+  auto int_key = flow::map_string_key<int>{ [](auto x){ return std::to_string(x); }};
+  auto keys = std::make_tuple(int_key, int_key);
+  auto result_func_memoize = flow::map_memoize<std::string, int, int>(keys);
+
+  // Here is the first selector.
+  // To combine multiple selector, we need to declare type explicitly.
+  flow::selector<RootState, std::string> string_concat_selector = flow::create_selector(
+                                                                      std::make_tuple(id_selector,sub_id_selector), 
+                                                                      result_func, 
+                                                                      result_func_memoize);
+
+  // Create second selector which is combined from first selector.
+  auto always_10_selector = flow::selector<RootState, int>{ [](auto _){ return 10; }};
+
+  auto another_result_func = flow::result_func<int, std::string, int>{ [](auto params){ return std::get<1>(params); }};
+
+  auto string_key = flow::map_string_key<std::string>{ [](auto x){ return x; }};
+  auto second_keys = std::make_tuple(string_key, int_key);
+  auto another_result_func_memoize = flow::map_memoize<int, std::string, int>(second_keys);
+
+  // // Here is the second selector
+  flow::selector<RootState, int> combined_selector = flow::create_selector(
+                                                        std::make_tuple(string_concat_selector, always_10_selector), 
+                                                        another_result_func, 
+                                                        another_result_func_memoize);
+
+  
+  // Result
+  auto root_state = RootState();
+  root_state.id = 2;
+  root_state.sub_state.sub_id = 4;
+
+  auto result_1 = combined_selector(root_state);
+  std::cout << result_1 << "\n\n";
+}
+
+
 void simple_example() {
   std::cout << "Start: Simple example" << std::endl;
 
@@ -122,5 +255,9 @@ int main() {
   simple_example();
   std::cout << "------------------------------" << std::endl;
   thunk_middleware_example();
+  std::cout << "------------------------------" << std::endl;
+  reselect_example();
+  std::cout << "------------------------------" << std::endl;
+  combine_selector();
   return 0;
 }
