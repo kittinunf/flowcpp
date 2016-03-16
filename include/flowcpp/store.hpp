@@ -18,9 +18,9 @@ class basic_store {
 
   basic_store() = delete;
 
-  action_t dispatch(std::function<action_t()> action_creator) { return _dispatcher(action_creator()); }
+  action_t dispatch(std::function<action_t()> action_creator) const { return _dispatcher(action_creator()); }
 
-  action_t dispatch(action_t action) { return _dispatcher(action); }
+  action_t dispatch(action_t action) const { return _dispatcher(action); }
 
   basic_disposable<> subscribe(state_subscribe_t<state_t> subscriber) const {
     subscriber(_current_state);
