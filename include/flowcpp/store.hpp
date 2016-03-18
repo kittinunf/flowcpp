@@ -22,8 +22,8 @@ class basic_store {
 
   action_t dispatch(action_t action) { return _dispatcher(action); }
 
-  basic_disposable<> subscribe(state_subscribe_t<state_t> subscriber) const {
-    subscriber(_current_state);
+  basic_disposable<> subscribe(state_subscribe_t<state_t> subscriber, bool needs_cache = true) const {
+    if (needs_cache) subscriber(_current_state);
     return _subscribing(subscriber);
   }
 
